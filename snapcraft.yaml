@@ -1,0 +1,36 @@
+name: tempestconf
+adopt-info: tempestconf
+summary: Automatic Tempest Configuration Generator
+description: |
+  python-tempestconf is a tool for automatic generation of tempest configuration
+  based on user’s cloud.
+confinement: strict
+grade: stable
+base: core22
+
+apps:
+  tempestconf:
+    command-chain:
+      - bin/set-ssl-envvars
+    command: bin/discover-tempest-config
+    plugs:
+      - network
+      - home
+
+parts:
+  tempestconf:
+    plugin: python
+    source: https://github.com/mert-kirpici/python-tempestconf
+    source-type: git
+    override-pull: |
+      craftctl default
+      craftctl set version="$(git describe)"
+    override-prime: |
+      craftctl default
+      cat << EOF > bin/set-ssl-envvars
+      #!/bin/bash
+      export SSL_CERT_FILE="\${OS_CACERT}"
+      exec "\${@}"
+      EOF
+      chmod +x bin/set-ssl-envvars
+
